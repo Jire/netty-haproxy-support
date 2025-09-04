@@ -7,7 +7,7 @@ to resolve "real" IP addresses behind a proxy_
 
 ```kotlin
 dependencies {
-    implementation("org.jire:netty-haproxy-support:1.4.0")
+    implementation("org.jire:netty-haproxy-support:1.4.1")
 }
 ```
 
