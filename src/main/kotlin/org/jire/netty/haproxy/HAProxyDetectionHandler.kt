@@ -27,7 +27,6 @@ public class HAProxyDetectionHandler<C : Channel>(
     private val childInitializer: ChannelInitializer<C>,
     private val haproxyMessageHandler: HAProxyMessageHandler<C>,
 ) : SimpleChannelInboundHandler<ByteBuf>(true) {
-
     override fun channelActive(ctx: ChannelHandlerContext) {
         // Because auto-read may be disabled, we need to trigger the detection
         ctx.read()
@@ -62,12 +61,12 @@ public class HAProxyDetectionHandler<C : Channel>(
         pipeline.addAfter(
             name,
             HAPROXY_MESSAGE_HANDLER_NAME,
-            haproxyMessageHandler
+            haproxyMessageHandler,
         )
         pipeline.replace(
             name,
             HAPROXY_MESSAGE_DECODER_HANDLER_NAME,
-            HAProxyMessageDecoder()
+            HAProxyMessageDecoder(),
         )
     }
 
@@ -81,17 +80,14 @@ public class HAProxyDetectionHandler<C : Channel>(
         pipeline.replace(
             this@HAProxyDetectionHandler,
             HAPROXY_CHANNEL_INITIALIZER_NAME,
-            childInitializer
+            childInitializer,
         )
     }
 
     private companion object {
-
         private const val FIRST_BYTE_V2: Short = 0x0D
         private const val FIRST_BYTE_V1: Short = 'P'.code.toShort()
 
         private val logger = InlineLogger()
-
     }
-
 }

@@ -16,10 +16,8 @@ public open class HAProxyIdleStateHandler(
     idleTimeout,
     idleTimeoutUnit,
 ) {
-
     public companion object {
         public const val DEFAULT_IDLE_TIMEOUT: Long = 60
         public val DEFAULT_IDLE_TIMEOUT_UNIT: TimeUnit = TimeUnit.SECONDS
     }
-
 }

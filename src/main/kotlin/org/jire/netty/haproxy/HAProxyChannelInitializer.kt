@@ -10,7 +10,7 @@ import io.netty.handler.codec.haproxy.HAProxyMessage
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder
 import io.netty.handler.timeout.IdleStateEvent
 import io.netty.handler.timeout.IdleStateHandler
-import org.jire.netty.haproxy.HAProxyAttribute.Companion.sourceAddress
+import org.jire.netty.haproxy.HAProxyAttributes.sourceAddress
 import org.jire.netty.haproxy.HAProxyHandlerNames.HAPROXY_CHANNEL_INITIALIZER_NAME
 import org.jire.netty.haproxy.HAProxyHandlerNames.HAPROXY_DETECTION_HANDLER_NAME
 import org.jire.netty.haproxy.HAProxyHandlerNames.HAPROXY_IDLE_STATE_HANDLER_NAME
@@ -42,13 +42,10 @@ public class HAProxyChannelInitializer<C : Channel>
 @JvmOverloads
 public constructor(
     private val childInitializer: ChannelInitializer<C>,
-
     private val mode: HAProxyMode = HAProxyMode.AUTO,
-
     private val idleTimeout: Long = DEFAULT_IDLE_TIMEOUT,
     private val idleTimeoutUnit: TimeUnit = DEFAULT_IDLE_TIMEOUT_UNIT,
 ) : ChannelInitializer<C>() {
-
     private val messageHandler: HAProxyMessageHandler<C> =
         HAProxyMessageHandler(childInitializer)
 
@@ -63,7 +60,7 @@ public constructor(
                 addIdleStateHandler(pipeline)
                 pipeline.addLast(
                     HAPROXY_DETECTION_HANDLER_NAME,
-                    detectionHandler
+                    detectionHandler,
                 )
             }
 
@@ -76,7 +73,7 @@ public constructor(
                 pipeline.replace(
                     this@HAProxyChannelInitializer,
                     HAPROXY_CHANNEL_INITIALIZER_NAME,
-                    childInitializer
+                    childInitializer,
                 )
             }
         }
@@ -84,7 +81,7 @@ public constructor(
 
     override fun userEventTriggered(
         ctx: ChannelHandlerContext,
-        evt: Any
+        evt: Any,
     ) {
         if (evt is IdleStateEvent) {
             logger.debug {
@@ -102,24 +99,23 @@ public constructor(
             HAPROXY_IDLE_STATE_HANDLER_NAME,
             HAProxyIdleStateHandler(
                 idleTimeout,
-                idleTimeoutUnit
-            )
+                idleTimeoutUnit,
+            ),
         )
     }
 
     public fun addHAProxyHandlers(pipeline: ChannelPipeline) {
         pipeline.addLast(
             HAPROXY_MESSAGE_DECODER_HANDLER_NAME,
-            HAProxyMessageDecoder()
+            HAProxyMessageDecoder(),
         )
         pipeline.addLast(
             HAPROXY_MESSAGE_HANDLER_NAME,
-            messageHandler
+            messageHandler,
         )
     }
 
     private companion object {
         private val logger = InlineLogger()
     }
-
 }

@@ -9,13 +9,13 @@ import io.netty.channel.SimpleChannelInboundHandler
 import io.netty.handler.codec.haproxy.HAProxyCommand
 import io.netty.handler.codec.haproxy.HAProxyMessage
 import io.netty.handler.codec.haproxy.HAProxyMessageDecoder
-import org.jire.netty.haproxy.HAProxyAttribute.Companion.haproxyAttribute
+import org.jire.netty.haproxy.HAProxyAttributes.haproxyAttribute
 import org.jire.netty.haproxy.HAProxyHandlerNames.HAPROXY_CHANNEL_INITIALIZER_NAME
 import org.jire.netty.haproxy.HAProxyHandlerNames.HAPROXY_IDLE_STATE_HANDLER_NAME
 
 /**
  * Handles the [HAProxyMessage] received from the [HAProxy](https://en.wikipedia.org/wiki/HAProxy) protocol to set
- * the the [HAProxyAttribute.KEY] attribute for the channel.
+ * the the [HAProxyAttributes.KEY] attribute for the channel.
  *
  * This handler should be added after a [HAProxyMessageDecoder] in the pipeline.
  *
@@ -25,7 +25,6 @@ import org.jire.netty.haproxy.HAProxyHandlerNames.HAPROXY_IDLE_STATE_HANDLER_NAM
 public class HAProxyMessageHandler<C : Channel>(
     private val childInitializer: ChannelInitializer<C>,
 ) : SimpleChannelInboundHandler<HAProxyMessage>(true) {
-
     override fun channelRead0(
         ctx: ChannelHandlerContext,
         msg: HAProxyMessage,
@@ -52,10 +51,8 @@ public class HAProxyMessageHandler<C : Channel>(
             HAProxyAttribute(
                 msg.protocolVersion(),
                 msg.proxiedProtocol(),
-
                 msg.sourceAddress(),
                 msg.sourcePort(),
-
                 msg.destinationAddress(),
                 msg.destinationPort(),
             )
@@ -69,9 +66,7 @@ public class HAProxyMessageHandler<C : Channel>(
         )
     }
 
-    private fun handleLocalCommand(
-        ctx: ChannelHandlerContext
-    ) {
+    private fun handleLocalCommand(ctx: ChannelHandlerContext) {
         logger.debug { "Received HAProxy LOCAL command from ${ctx.channel()}" }
         ctx.close()
     }
@@ -79,5 +74,4 @@ public class HAProxyMessageHandler<C : Channel>(
     private companion object {
         private val logger = InlineLogger()
     }
-
 }

@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "org.jire"
-version = "1.0.0"
+version = "1.1.0"
 description = "Support for the HAProxy protocol, to resolve \"real\" IP addresses behind a proxy"
 
 val isSnapshot = version.toString().endsWith("SNAPSHOT")
@@ -48,7 +48,7 @@ publishing {
         }
     }
     publications {
-        create<MavenPublication>("lib") {
+        create<MavenPublication>("netty-haproxy-support") {
             from(components["java"])
 
             pom {

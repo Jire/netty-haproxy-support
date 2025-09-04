@@ -4,7 +4,6 @@ package org.jire.netty.haproxy
  * Different modes for configuration of the [HAProxyChannelInitializer].
  */
 public enum class HAProxyMode {
-
     /**
      * Always expect and handle the [HAProxy](https://en.wikipedia.org/wiki/HAProxy) protocol.
      * If the protocol is not detected, the connection will be closed.
@@ -22,7 +21,4 @@ public enum class HAProxyMode {
      * Never expect or handle the [HAProxy](https://en.wikipedia.org/wiki/HAProxy) protocol.
      */
     OFF,
-
-    ;
-
 }
