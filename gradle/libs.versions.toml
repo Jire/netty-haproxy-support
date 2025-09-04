@@ -1,0 +1,13 @@
+[versions]
+kotlin = "1.9.23"
+netty = "4.2.4.Final"
+
+[libraries]
+netty-bom = { module = "io.netty:netty-bom", version.ref = "netty" }
+netty-codec-haproxy = { module = "io.netty:netty-codec-haproxy", version.ref = "netty" }
+netty-handler = { module = "io.netty:netty-handler", version.ref = "netty" }
+
+kotlin-inline-logger = { module = "com.michael-bull.kotlin-inline-logger:kotlin-inline-logger", version = "1.0.6" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
