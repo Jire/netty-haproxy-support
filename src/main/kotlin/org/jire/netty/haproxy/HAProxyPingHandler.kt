@@ -2,9 +2,9 @@ package org.jire.netty.haproxy
 
 import io.netty.buffer.ByteBuf
 import io.netty.buffer.Unpooled
-import io.netty.channel.ChannelHandler
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.ChannelHandlerContext
+import io.netty.channel.ChannelInboundHandler
 import io.netty.channel.SimpleChannelInboundHandler
 import org.jire.netty.haproxy.HAProxyHandlerNames.HAPROXY_PING_HANDLER_CHILD_NAME
 
@@ -24,48 +24,49 @@ import org.jire.netty.haproxy.HAProxyHandlerNames.HAPROXY_PING_HANDLER_CHILD_NAM
  */
 @Sharable
 public class HAProxyPingHandler
-    @JvmOverloads
-    public constructor(
-        private val childHandler: ChannelHandler,
-        private val requestOpcode: Int = DEFAULT_PING_REQUEST_OPCODE,
-        private val responseOpcode: Int = DEFAULT_PING_RESPONSE_OPCODE,
-    ) : SimpleChannelInboundHandler<ByteBuf>(true) {
-        private val response: ByteBuf =
-            Unpooled.unreleasableBuffer(
-                Unpooled
-                    .directBuffer(1, 1)
-                    .writeByte(responseOpcode),
+@JvmOverloads
+public constructor(
+    override val childHandler: ChannelInboundHandler,
+    private val requestOpcode: Int = DEFAULT_PING_REQUEST_OPCODE,
+    private val responseOpcode: Int = DEFAULT_PING_RESPONSE_OPCODE,
+) : SimpleChannelInboundHandler<ByteBuf>(true),
+    HAProxyParentHandler {
+    private val response: ByteBuf =
+        Unpooled.unreleasableBuffer(
+            Unpooled
+                .directBuffer(1, 1)
+                .writeByte(responseOpcode),
+        )
+
+    override fun channelRead0(
+        ctx: ChannelHandlerContext,
+        msg: ByteBuf,
+    ) {
+        val readerIndex = msg.readerIndex()
+        val opcode = msg.getUnsignedByte(readerIndex).toInt()
+        if (opcode == requestOpcode) {
+            msg.readerIndex(readerIndex + 1)
+            ctx.writeAndFlush(response, ctx.voidPromise())
+        } else {
+            val pipeline = ctx.pipeline()
+            pipeline.replace(
+                this,
+                HAPROXY_PING_HANDLER_CHILD_NAME,
+                childHandler,
             )
 
-        override fun channelRead0(
-            ctx: ChannelHandlerContext,
-            msg: ByteBuf,
-        ) {
-            val readerIndex = msg.readerIndex()
-            val opcode = msg.getUnsignedByte(readerIndex).toInt()
-            if (opcode == requestOpcode) {
-                msg.readerIndex(readerIndex + 1)
-                ctx.writeAndFlush(response, ctx.voidPromise())
-            } else {
-                val pipeline = ctx.pipeline()
-                pipeline.replace(
-                    this,
-                    HAPROXY_PING_HANDLER_CHILD_NAME,
-                    childHandler,
-                )
+            val retainedMsg = msg.retain()
+            ctx.channel().eventLoop().execute {
+                ctx.fireChannelRead(retainedMsg)
 
-                val retainedMsg = msg.retain()
-                ctx.channel().eventLoop().execute {
-                    ctx.fireChannelRead(retainedMsg)
-
-                    // Because auto-read may be disabled, we need to trigger the next read
-                    ctx.read()
-                }
+                // Because auto-read may be disabled, we need to trigger the next read
+                ctx.read()
             }
         }
-
-        public companion object {
-            public const val DEFAULT_PING_REQUEST_OPCODE: Int = 200
-            public const val DEFAULT_PING_RESPONSE_OPCODE: Int = 201
-        }
     }
+
+    public companion object {
+        public const val DEFAULT_PING_REQUEST_OPCODE: Int = 200
+        public const val DEFAULT_PING_RESPONSE_OPCODE: Int = 201
+    }
+}

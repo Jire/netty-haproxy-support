@@ -36,64 +36,65 @@ import java.util.concurrent.TimeUnit
  */
 @Sharable
 public class HAProxyChannelInitializer
-    @JvmOverloads
-    public constructor(
-        private val childHandler: ChannelInboundHandler,
-        private val mode: HAProxyMode = HAProxyMode.AUTO,
-        private val idleTimeout: Long = DEFAULT_IDLE_TIMEOUT,
-        private val idleTimeoutUnit: TimeUnit = DEFAULT_IDLE_TIMEOUT_UNIT,
-    ) : ChannelInitializer<Channel>() {
-        private val messageHandler: HAProxyMessageHandler =
-            HAProxyMessageHandler(childHandler)
+@JvmOverloads
+public constructor(
+    override val childHandler: ChannelInboundHandler,
+    private val mode: HAProxyMode = HAProxyMode.AUTO,
+    private val idleTimeout: Long = DEFAULT_IDLE_TIMEOUT,
+    private val idleTimeoutUnit: TimeUnit = DEFAULT_IDLE_TIMEOUT_UNIT,
+) : ChannelInitializer<Channel>(),
+    HAProxyParentHandler {
+    private val messageHandler: HAProxyMessageHandler =
+        HAProxyMessageHandler(childHandler)
 
-        private val detectionHandler: HAProxyDetectionHandler =
-            HAProxyDetectionHandler(childHandler, messageHandler)
+    private val detectionHandler: HAProxyDetectionHandler =
+        HAProxyDetectionHandler(childHandler, messageHandler)
 
-        override fun initChannel(ch: Channel) {
-            val pipeline = ch.pipeline()
+    override fun initChannel(ch: Channel) {
+        val pipeline = ch.pipeline()
 
-            when (mode) {
-                HAProxyMode.AUTO -> {
-                    addIdleStateHandler(pipeline)
-                    pipeline.addLast(
-                        HAPROXY_DETECTION_HANDLER_NAME,
-                        detectionHandler,
-                    )
-                }
+        when (mode) {
+            HAProxyMode.AUTO -> {
+                addIdleStateHandler(pipeline)
+                pipeline.addLast(
+                    HAPROXY_DETECTION_HANDLER_NAME,
+                    detectionHandler,
+                )
+            }
 
-                HAProxyMode.ON -> {
-                    addIdleStateHandler(pipeline)
-                    addHAProxyHandlers(pipeline)
-                }
+            HAProxyMode.ON -> {
+                addIdleStateHandler(pipeline)
+                addHAProxyHandlers(pipeline)
+            }
 
-                HAProxyMode.OFF -> {
-                    pipeline.replace(
-                        this@HAProxyChannelInitializer,
-                        HAPROXY_CHANNEL_INITIALIZER_CHILD_NAME,
-                        childHandler,
-                    )
-                }
+            HAProxyMode.OFF -> {
+                pipeline.replace(
+                    this@HAProxyChannelInitializer,
+                    HAPROXY_CHANNEL_INITIALIZER_CHILD_NAME,
+                    childHandler,
+                )
             }
         }
-
-        public fun addIdleStateHandler(pipeline: ChannelPipeline) {
-            pipeline.addLast(
-                HAPROXY_IDLE_STATE_HANDLER_NAME,
-                HAProxyIdleStateHandler(
-                    idleTimeout,
-                    idleTimeoutUnit,
-                ),
-            )
-        }
-
-        public fun addHAProxyHandlers(pipeline: ChannelPipeline) {
-            pipeline.addLast(
-                HAPROXY_MESSAGE_DECODER_HANDLER_NAME,
-                HAProxyMessageDecoder(),
-            )
-            pipeline.addLast(
-                HAPROXY_MESSAGE_HANDLER_NAME,
-                messageHandler,
-            )
-        }
     }
+
+    public fun addIdleStateHandler(pipeline: ChannelPipeline) {
+        pipeline.addLast(
+            HAPROXY_IDLE_STATE_HANDLER_NAME,
+            HAProxyIdleStateHandler(
+                idleTimeout,
+                idleTimeoutUnit,
+            ),
+        )
+    }
+
+    public fun addHAProxyHandlers(pipeline: ChannelPipeline) {
+        pipeline.addLast(
+            HAPROXY_MESSAGE_DECODER_HANDLER_NAME,
+            HAProxyMessageDecoder(),
+        )
+        pipeline.addLast(
+            HAPROXY_MESSAGE_HANDLER_NAME,
+            messageHandler,
+        )
+    }
+}
