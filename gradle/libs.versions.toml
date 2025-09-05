@@ -1,6 +1,6 @@
 [versions]
 kotlin = "1.9.23"
-netty = "4.2.4.Final"
+netty = "4.2.5.Final"
 
 [libraries]
 netty-bom = { module = "io.netty:netty-bom", version.ref = "netty" }
