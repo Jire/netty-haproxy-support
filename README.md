@@ -7,7 +7,7 @@ to resolve "real" IP addresses behind a proxy_
 
 ```kotlin
 dependencies {
-    implementation("org.jire:netty-haproxy-support:1.4.1")
+    implementation("org.jire:netty-haproxy-support:1.5.0")
 }
 ```
 
@@ -51,3 +51,15 @@ You can also access all available attributes via `channel.haproxyAttribute`.
 
 Also, all of the `HAProxyAttributes` are available as extension properties on `ChannelHandlerContext` as well, e.g.
 `ctx.sourceAddress` or `ctx.sourceHost`.
+
+### Custom ping support
+
+Useful to measure true end-to-end latency from client -> proxy -> server.
+
+To use, simply wrap your `ChannelInitializer` with `HAProxyPingHandler`, e.g.:
+
+```kotlin
+serverBootstrap.childHandlerProxied(
+    HAProxyPingHandler(yourChannelInitializer)
+)
+```
